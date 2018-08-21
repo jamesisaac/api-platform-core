@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Core\Event;
 
+use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Request;
 
-class ControllerResultEvent
+class ControllerResultEvent extends Event implements ControllerResultEventInterface
 {
   private $request;
   private $controllerResult;
