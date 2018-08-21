@@ -17,7 +17,7 @@ use ApiPlatform\Core\Api\IriConverterInterface;
 use ApiPlatform\Core\DataPersister\DataPersisterInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use ApiPlatform\Core\Exception\ItemNotFoundException;
-use ApiPlatform\Core\GraphQl\Event\GraplQlControllerResultEvent;
+use ApiPlatform\Core\GraphQl\Event\GraphQlControllerResultEvent;
 use ApiPlatform\Core\GraphQl\Resolver\ResourceAccessCheckerTrait;
 use ApiPlatform\Core\GraphQl\Serializer\ItemNormalizer;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
@@ -100,7 +100,7 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
                     $context += $resourceMetadata->getGraphqlAttribute($operationName, 'denormalization_context', [], true);
 
                     $item = $this->normalizer->denormalize($args['input'], $resourceClass, ItemNormalizer::FORMAT, $context);
-                    $event = new GraplQlControllerResultEvent($this->request, $item, $operationName);
+                    $event = new GraphQlControllerResultEvent($this->request, $item, $operationName);
                     
                     $this->eventDispatcher->dispatch('api_platform.pre_validate', $event);
                     $this->validate($item, $info, $resourceMetadata, $operationName);

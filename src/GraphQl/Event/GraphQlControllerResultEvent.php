@@ -17,7 +17,7 @@ use ApiPlatform\Core\Event;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Request;
 
-class GraplQlControllerResultEvent extends Event implements ControllerResultEventInterface
+class GraphQlControllerResultEvent extends Event implements ControllerResultEventInterface
 {
   private $request;
   private $controllerResult;
