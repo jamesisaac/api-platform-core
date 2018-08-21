@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Core\GraphQl\Event;
 
-use ApiPlatform\Core\Event;
+use ApiPlatform\Core\Event\ControllerResultEventInterface;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Request;
 
