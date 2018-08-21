@@ -98,13 +98,17 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
                 case 'update':
                     $context = null === $item ? ['resource_class' => $resourceClass] : ['resource_class' => $resourceClass, 'object_to_populate' => $item];
                     $context += $resourceMetadata->getGraphqlAttribute($operationName, 'denormalization_context', [], true);
-                    $item = $this->normalizer->denormalize($args['input'], $resourceClass, ItemNormalizer::FORMAT, $context);
 
+                    $item = $this->normalizer->denormalize($args['input'], $resourceClass, ItemNormalizer::FORMAT, $context);
                     $event = new ControllerResultEvent($this->request, $item);
+                    
                     $this->eventDispatcher->dispatch('api_platform.pre_validate', $event);
                     $this->validate($item, $info, $resourceMetadata, $operationName);
                     $this->eventDispatcher->dispatch('api_platform.post_validate', $event);
+                    
+                    $this->eventDispatcher->dispatch('api_platform.pre_write', $event);
                     $persistResult = $this->dataPersister->persist($item);
+                    $this->eventDispatcher->dispatch('api_platform.post_write', $event);
 
                     if (null === $persistResult) {
                         @trigger_error(sprintf('Returning void from %s::persist() is deprecated since API Platform 2.3 and will not be supported in API Platform 3, an object should always be returned.', DataPersisterInterface::class), E_USER_DEPRECATED);

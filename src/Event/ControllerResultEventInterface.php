@@ -15,6 +15,10 @@ namespace ApiPlatform\Core\Event;
 
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Compatiable with Symfony's GetResponseForControllerResultEvent, but easier
+ * to generate from outside the framework.
+ */
 interface ControllerResultEventInterface
 {
   public function getRequest(): Request;
