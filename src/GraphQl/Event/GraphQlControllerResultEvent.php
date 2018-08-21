@@ -11,20 +11,23 @@
 
 declare(strict_types=1);
 
-namespace ApiPlatform\Core\Event;
+namespace ApiPlatform\Core\GraphQl\Event;
 
+use ApiPlatform\Core\Event;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Request;
 
-class ControllerResultEvent extends Event implements ControllerResultEventInterface
+class GraplQlControllerResultEvent extends Event implements ControllerResultEventInterface
 {
   private $request;
   private $controllerResult;
+  private $operationName;
 
-  public function __construct(Request $request, $controllerResult)
+  public function __construct(Request $request, $controllerResult, string $operationName)
   {
     $this->request = $request;
     $this->controllerResult = $controllerResult;
+    $this->operationName = $operationName;
   }
 
   public function getRequest(): Request
@@ -35,5 +38,10 @@ class ControllerResultEvent extends Event implements ControllerResultEventInterf
   public function getControllerResult()
   {
     return $this->controllerResult;
+  }
+
+  public function getOperationName(): string
+  {
+    return $this->operationName;
   }
 }
