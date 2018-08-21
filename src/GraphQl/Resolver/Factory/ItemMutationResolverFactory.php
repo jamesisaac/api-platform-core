@@ -44,10 +44,11 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
     private $dataPersister;
     private $normalizer;
     private $resourceMetadataFactory;
+    private $eventDispatcher;
     private $resourceAccessChecker;
     private $validator;
 
-    public function __construct(IriConverterInterface $iriConverter, DataPersisterInterface $dataPersister, NormalizerInterface $normalizer, ResourceMetadataFactoryInterface $resourceMetadataFactory, ResourceAccessCheckerInterface $resourceAccessChecker = null, ValidatorInterface $validator = null)
+    public function __construct(IriConverterInterface $iriConverter, DataPersisterInterface $dataPersister, NormalizerInterface $normalizer, ResourceMetadataFactoryInterface $resourceMetadataFactory, EventDispatcherInterface $eventDispatcher, ResourceAccessCheckerInterface $resourceAccessChecker = null, ValidatorInterface $validator = null)
     {
         if (!$normalizer instanceof DenormalizerInterface) {
             throw new InvalidArgumentException(sprintf('The normalizer must implements the "%s" interface', DenormalizerInterface::class));
@@ -57,6 +58,7 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
         $this->dataPersister = $dataPersister;
         $this->normalizer = $normalizer;
         $this->resourceMetadataFactory = $resourceMetadataFactory;
+        $this->eventDispatcher = $eventDispatcher;
         $this->resourceAccessChecker = $resourceAccessChecker;
         $this->validator = $validator;
     }
@@ -92,7 +94,9 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
                     $context = null === $item ? ['resource_class' => $resourceClass] : ['resource_class' => $resourceClass, 'object_to_populate' => $item];
                     $context += $resourceMetadata->getGraphqlAttribute($operationName, 'denormalization_context', [], true);
                     $item = $this->normalizer->denormalize($args['input'], $resourceClass, ItemNormalizer::FORMAT, $context);
+                    $this->eventDispatcher->dispatch('api_platform.pre_validate');
                     $this->validate($item, $info, $resourceMetadata, $operationName);
+                    $this->eventDispatcher->dispatch('api_platform.post_validate');
                     $persistResult = $this->dataPersister->persist($item);
 
                     if (null === $persistResult) {

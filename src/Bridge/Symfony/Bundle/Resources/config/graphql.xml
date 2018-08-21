@@ -25,6 +25,7 @@
             <argument type="service" id="api_platform.data_persister" />
             <argument type="service" id="serializer" />
             <argument type="service" id="api_platform.metadata.resource.metadata_factory" />
+            <argument type="service" id="event_dispatcher" />
             <argument type="service" id="api_platform.security.resource_access_checker" on-invalid="null" />
             <argument type="service" id="api_platform.validator" on-invalid="null" />
         </service>
@@ -59,6 +60,7 @@
             <argument type="service" id="api_platform.graphql.schema_builder" />
             <argument type="service" id="api_platform.graphql.executor" />
             <argument type="service" id="twig" />
+            <argument type="service" id="event_dispatcher" />
             <argument>%kernel.debug%</argument>
             <argument>%api_platform.graphql.graphiql.enabled%</argument>
             <argument>%api_platform.title%</argument>
