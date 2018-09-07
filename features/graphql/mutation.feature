@@ -40,6 +40,7 @@ Feature: GraphQL mutation support
     mutation {
       createFoo(input: {name: "A new one", bar: "new", clientMutationId: "myId"}) {
         id
+        _id
         name
         bar
         clientMutationId
@@ -50,6 +51,7 @@ Feature: GraphQL mutation support
     And the response should be in JSON
     And the header "Content-Type" should be equal to "application/json"
     And the JSON node "data.createFoo.id" should be equal to "/foos/1"
+    And the JSON node "data.createFoo._id" should be equal to 1
     And the JSON node "data.createFoo.name" should be equal to "A new one"
     And the JSON node "data.createFoo.bar" should be equal to "new"
     And the JSON node "data.createFoo.clientMutationId" should be equal to "myId"
