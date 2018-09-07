@@ -443,7 +443,7 @@ final class SchemaBuilder implements SchemaBuilderInterface
             if (
                 null === ($propertyType = $propertyMetadata->getType())
                 || (!$input && null === $mutationName && false === $propertyMetadata->isReadable())
-                || (null !== $mutationName && false === $propertyMetadata->isWritable())
+                || (true === $input && null !== $mutationName && false === $propertyMetadata->isWritable())
             ) {
                 continue;
             }
