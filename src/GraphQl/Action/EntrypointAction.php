@@ -71,7 +71,7 @@ final class EntrypointAction
         }
 
         $this->eventDispatcher->dispatch('api_platform.pre_respond');
-        return new JsonResponse($executionResult->toArray($this->debug), $executionResult->errors ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK);
+        return new JsonResponse($executionResult->toArray($this->debug));
     }
 
     private function parseRequest(Request $request): array
