@@ -17,6 +17,7 @@ use ApiPlatform\Core\Api\IriConverterInterface;
 use ApiPlatform\Core\DataPersister\DataPersisterInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use ApiPlatform\Core\Exception\ItemNotFoundException;
+use ApiPlatform\Core\GraphQl\Event\GraphQlControllerResultEvent;
 use ApiPlatform\Core\GraphQl\Resolver\ResourceAccessCheckerTrait;
 use ApiPlatform\Core\GraphQl\Serializer\ItemNormalizer;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
@@ -26,6 +27,8 @@ use ApiPlatform\Core\Validator\Exception\ValidationException;
 use ApiPlatform\Core\Validator\ValidatorInterface;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -44,10 +47,12 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
     private $dataPersister;
     private $normalizer;
     private $resourceMetadataFactory;
+    private $eventDispatcher;
+    private $request;
     private $resourceAccessChecker;
     private $validator;
 
-    public function __construct(IriConverterInterface $iriConverter, DataPersisterInterface $dataPersister, NormalizerInterface $normalizer, ResourceMetadataFactoryInterface $resourceMetadataFactory, ResourceAccessCheckerInterface $resourceAccessChecker = null, ValidatorInterface $validator = null)
+    public function __construct(IriConverterInterface $iriConverter, DataPersisterInterface $dataPersister, NormalizerInterface $normalizer, ResourceMetadataFactoryInterface $resourceMetadataFactory, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ResourceAccessCheckerInterface $resourceAccessChecker = null, ValidatorInterface $validator = null)
     {
         if (!$normalizer instanceof DenormalizerInterface) {
             throw new InvalidArgumentException(sprintf('The normalizer must implements the "%s" interface', DenormalizerInterface::class));
@@ -57,6 +62,8 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
         $this->dataPersister = $dataPersister;
         $this->normalizer = $normalizer;
         $this->resourceMetadataFactory = $resourceMetadataFactory;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->request = $requestStack->getCurrentRequest();
         $this->resourceAccessChecker = $resourceAccessChecker;
         $this->validator = $validator;
     }
@@ -91,9 +98,17 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
                 case 'update':
                     $context = null === $item ? ['resource_class' => $resourceClass] : ['resource_class' => $resourceClass, 'object_to_populate' => $item];
                     $context += $resourceMetadata->getGraphqlAttribute($operationName, 'denormalization_context', [], true);
+
                     $item = $this->normalizer->denormalize($args['input'], $resourceClass, ItemNormalizer::FORMAT, $context);
+                    $event = new GraphQlControllerResultEvent($this->request, $item, $operationName);
+                    
+                    $this->eventDispatcher->dispatch('api_platform.pre_validate', $event);
                     $this->validate($item, $info, $resourceMetadata, $operationName);
+                    $this->eventDispatcher->dispatch('api_platform.post_validate', $event);
+                    
+                    $this->eventDispatcher->dispatch('api_platform.pre_write', $event);
                     $persistResult = $this->dataPersister->persist($item);
+                    $this->eventDispatcher->dispatch('api_platform.post_write', $event);
 
                     if (null === $persistResult) {
                         @trigger_error(sprintf('Returning void from %s::persist() is deprecated since API Platform 2.3 and will not be supported in API Platform 3, an object should always be returned.', DataPersisterInterface::class), E_USER_DEPRECATED);

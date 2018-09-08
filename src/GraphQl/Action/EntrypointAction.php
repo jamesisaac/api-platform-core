@@ -17,6 +17,7 @@ use ApiPlatform\Core\GraphQl\ExecutorInterface;
 use ApiPlatform\Core\GraphQl\Type\SchemaBuilderInterface;
 use GraphQL\Error\Error;
 use GraphQL\Executor\ExecutionResult;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,15 +32,17 @@ final class EntrypointAction
     private $schemaBuilder;
     private $executor;
     private $twig;
+    private $eventDispatcher;
     private $debug;
     private $title;
     private $graphiqlEnabled;
 
-    public function __construct(SchemaBuilderInterface $schemaBuilder, ExecutorInterface $executor, \Twig_Environment $twig, bool $debug = false, bool $graphiqlEnabled = false, string $title = '')
+    public function __construct(SchemaBuilderInterface $schemaBuilder, ExecutorInterface $executor, \Twig_Environment $twig, EventDispatcherInterface $eventDispatcher, bool $debug = false, bool $graphiqlEnabled = false, string $title = '')
     {
         $this->schemaBuilder = $schemaBuilder;
         $this->executor = $executor;
         $this->twig = $twig;
+        $this->eventDispatcher = $eventDispatcher;
         $this->debug = $debug;
         $this->graphiqlEnabled = $graphiqlEnabled;
         $this->title = $title;
@@ -67,7 +70,8 @@ final class EntrypointAction
             $executionResult = new ExecutionResult(null, [$e]);
         }
 
-        return new JsonResponse($executionResult->toArray($this->debug), $executionResult->errors ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK);
+        $this->eventDispatcher->dispatch('api_platform.pre_respond');
+        return new JsonResponse($executionResult->toArray($this->debug));
     }
 
     private function parseRequest(Request $request): array
