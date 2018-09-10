@@ -102,6 +102,8 @@ final class ItemMutationResolverFactory implements ResolverFactoryInterface
                     $item = $this->normalizer->denormalize($args['input'], $resourceClass, ItemNormalizer::FORMAT, $context);
                     $event = new GraphQlControllerResultEvent($this->request, $item, $operationName);
                     
+                    $this->request->attributes->set('_api_resource_class', $resourceClass);
+                    
                     $this->eventDispatcher->dispatch('api_platform.pre_validate', $event);
                     $this->validate($item, $info, $resourceMetadata, $operationName);
                     $this->eventDispatcher->dispatch('api_platform.post_validate', $event);
